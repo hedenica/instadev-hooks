@@ -1,71 +1,58 @@
-import React from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React,{ useState, useEffect } from 'react';
 
 import Post from '../components/Post';
 import Loading from '../components/Loading';
 
 import './Feed.scss';
 
-class Feed extends React.Component {
-  constructor(props) {
-    super(props);
+const Feed = () => {
+  const [users, setUsers] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [usersFetched, setUsersFetched] = useState(0);
 
-    this.state = {
-      users: [],
-      posts: [],
-      usersFetched: 0,
-    }
+  const getUserPostById = (postUserId)=> {
+    return users.find(user => postUserId === user.id);
   }
 
-  componentDidMount() {
+  useEffect(() =>{
     const usersList = fetch('https://5e7d0266a917d70016684219.mockapi.io/api/v1/users');
-
+  
     usersList
       .then((res) => res.json())
-      .then(dados => this.setState({ users:  dados }));
-  }
+      .then(dados => setUsers(dados));
+  },[]);
 
-  componentDidUpdate() {
-    const { users, posts, usersFetched } = this.state;
-
+  useEffect(() =>{
     if (usersFetched === users.length) {
       return;
     }
 
     fetch(`https://5e7d0266a917d70016684219.mockapi.io/api/v1/users/${users[usersFetched].id}/posts`)
       .then((res) => res.json())
-      .then(dados => this.setState({
-        posts: [...posts, ...dados],
-        usersFetched: usersFetched + 1,
-        loading: false,
-      }))
-  }
+      .then(dados => {
 
-  getUserPostById(postUserId) {
-    const { users } = this.state;
+        setPosts([...posts, ...dados]);
+        setUsersFetched(usersFetched + 1);
+      })
+  }, [users, usersFetched])
 
-    return users.find(user => postUserId === user.id);
-  }
-
-  render() {
-    const { posts } = this.state;
-
-    return (
-      <div className="container">
-        <section className="feed">
-          { posts.length > 0
-            ? posts.map((cadaPost) => (
-              <Post
-                key={cadaPost.id}
-                infoPost={cadaPost}
-                infoUsuario={this.getUserPostById(cadaPost.userId)}
-              />
-            ))
-            : <Loading />
-          }
-        </section>
-      </div>
-    );
-  }
+  return (
+    <div className="container">
+      <section className="feed">
+        { posts.length > 0
+          ? posts.map((cadaPost) => (
+            <Post
+              key={cadaPost.id}
+              infoPost={cadaPost}
+              infoUsuario={getUserPostById(cadaPost.userId)}
+            />
+          ))
+          : <Loading />
+        }
+      </section>
+    </div>
+  );  
 }
 
 export default Feed;
